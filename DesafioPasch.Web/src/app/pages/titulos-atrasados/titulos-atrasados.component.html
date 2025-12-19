@@ -81,7 +81,7 @@
       <ng-container matColumnDef="valorOriginal">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="valorOriginal" >Valor original</th>
         <td mat-cell *matCellDef="let x" >
-          {{ x.valorOriginal | currency:'BRL':'symbol':'1.2-2' }}
+          {{ x.valorOriginalFmt }}
         </td>
       </ng-container>
 
@@ -93,21 +93,21 @@
       <ng-container matColumnDef="valorAtualizado">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="valorAtualizado" >Valor atualizado</th>
         <td mat-cell *matCellDef="let x" >
-          {{ x.valorAtualizado | currency:'BRL':'symbol':'1.2-2' }}
+          {{ x.valorAtualizadoFmt }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="multa">
         <th mat-header-cell *matHeaderCellDef >Multa</th>
         <td mat-cell *matCellDef="let x" >
-          {{ x.multa | currency:'BRL':'symbol':'1.2-2' }}
+          {{ x.multaFmt }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="jurosTotais">
         <th mat-header-cell *matHeaderCellDef >Juros</th>
         <td mat-cell *matCellDef="let x" >
-          {{ x.jurosTotais | currency:'BRL':'symbol':'1.2-2' }}
+          {{ x.jurosTotaisFmt }}
         </td>
       </ng-container>
 

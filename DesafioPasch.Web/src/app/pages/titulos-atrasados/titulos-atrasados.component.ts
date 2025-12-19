@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -6,6 +6,14 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { TitulosApiService } from '../../core/services/titulos-api.service';
 import { TituloEmAtraso, TitulosAtrasadosQuery } from '../../core/models/titulo-em-atraso.model';
+
+// ViewModel para reduzir custo de pipes no template (moeda já formatada no TS)
+export type TituloEmAtrasoVm = TituloEmAtraso & {
+  valorOriginalFmt: string;
+  valorAtualizadoFmt: string;
+  multaFmt: string;
+  jurosTotaisFmt: string;
+};
 
 // Material
 import { MatCardModule } from '@angular/material/card';
@@ -17,13 +25,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ChangeDetectorRef } from '@angular/core';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 
 @Component({
   selector: 'app-titulos-atrasados',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -45,13 +53,22 @@ import { ChangeDetectorRef } from '@angular/core';
 export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
+  private readonly currency = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
   loading = false;
   error?: string;
 
-  itens: TituloEmAtraso[] = [];
+  itens: TituloEmAtrasoVm[] = [];
+
+  // importante: NÃO use getter que recria array no template.
+  // recalculamos a página somente quando dados/página mudarem.
+  pagedItens: TituloEmAtrasoVm[] = [];
 
   // table
-  displayedColumns: Array<keyof TituloEmAtraso | 'acoes'> = [
+  displayedColumns: string[] = [
     'numeroTitulo',
     'nomeDevedor',
     'quantidadeParcelas',
@@ -81,7 +98,6 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private snack: MatSnackBar,
     private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
@@ -96,11 +112,6 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.itens.length / this.pageSize));
-  }
-
-  get pagedItens(): TituloEmAtraso[] {
-    const start = this.pageIndex * this.pageSize;
-    return this.itens.slice(start, start + this.pageSize);
   }
 
   ngOnInit(): void {
@@ -124,6 +135,7 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
         this.sortDir = (p.get('sortDir') as any) ?? 'desc';
 
         this.pageIndex = 0;
+        this.paginator?.firstPage();
         this.buscar();
       });
   }
@@ -137,7 +149,6 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
     this.pageIndex = 0;
     this.paginator?.firstPage();
     this.syncUrl();
-    this.buscar();
   }
 
   onLimparClick(): void {
@@ -149,12 +160,13 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
     this.paginator?.firstPage();
 
     this.syncUrl();
-    this.buscar();
   }
 
   onPage(ev: PageEvent): void {
     this.pageIndex = ev.pageIndex;
     this.pageSize = ev.pageSize;
+    this.applyPaging();
+    this.cdr.markForCheck();
   }
 
   onSortChange(ev: Sort): void {
@@ -179,38 +191,66 @@ export class TitulosAtrasadosComponent implements OnInit, OnDestroy {
     this.paginator?.firstPage();
 
     this.syncUrl();
-    this.buscar();
   }
 
   buscar(): void {
-  queueMicrotask(() => this.loading = true);
-  this.error = undefined;
+    queueMicrotask(() => (this.loading = true));
+    this.error = undefined;
 
-  const v = this.form.getRawValue();
+    const v = this.form.getRawValue();
 
-  const query: TitulosAtrasadosQuery = {
-    numeroTitulo: v.numeroTitulo?.trim() || undefined,
-    nomeDevedor: v.nomeDevedor?.trim() || undefined,
-    minDiasAtraso: v.minDiasAtraso ?? undefined,
-    maxDiasAtraso: v.maxDiasAtraso ?? undefined,
-    minValorAtualizado: v.minValorAtualizado ?? undefined,
-    maxValorAtualizado: v.maxValorAtualizado ?? undefined,
-    sortBy: this.sortBy,
-    sortDir: this.sortDir
-  };
+    const query: TitulosAtrasadosQuery = {
+      numeroTitulo: v.numeroTitulo?.trim() || undefined,
+      nomeDevedor: v.nomeDevedor?.trim() || undefined,
+      minDiasAtraso: v.minDiasAtraso ?? undefined,
+      maxDiasAtraso: v.maxDiasAtraso ?? undefined,
+      minValorAtualizado: v.minValorAtualizado ?? undefined,
+      maxValorAtualizado: v.maxValorAtualizado ?? undefined,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir
+    };
 
-  this.api.listarAtrasados(query).subscribe({
-    next: (data) => {
-      this.itens = data;
-      queueMicrotask(() => this.loading = false);
-    },
-    error: (err) => {
-      console.error(err);
-      this.error = 'Falha ao carregar títulos.';
-      queueMicrotask(() => this.loading = false);
-    }
-  });
+    this.api.listarAtrasados(query).subscribe({
+      next: (data) => {
+        this.itens = this.mapToVm(data);
+        this.pageIndex = 0;
+        this.paginator?.firstPage();
+        this.applyPaging();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error(err);
+        this.error = 'Falha ao carregar títulos.';
+        this.applyPaging();
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  
+private fmtCurrency(v: number | null | undefined): string {
+  if (v === null || v === undefined) return '—';
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return this.currency.format(n);
 }
+
+private mapToVm(data: TituloEmAtraso[]): TituloEmAtrasoVm[] {
+  return data.map((x) => ({
+    ...x,
+    valorOriginalFmt: this.fmtCurrency(x.valorOriginal),
+    valorAtualizadoFmt: this.fmtCurrency(x.valorAtualizado),
+    multaFmt: this.fmtCurrency(x.multa),
+    jurosTotaisFmt: this.fmtCurrency(x.jurosTotais)
+  }));
+}
+
+private applyPaging(): void {
+    const start = this.pageIndex * this.pageSize;
+    this.pagedItens = this.itens.slice(start, start + this.pageSize);
+  }
 
   private syncUrl(): void {
     const v = this.form.getRawValue();

@@ -39,13 +39,13 @@ A solução é composta por:
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
-- .NET
+- **.NET 10** (ASP.NET Core Web API)
 - API REST
 - DTOs para comunicação
 - Separação Controller / Service
 
 ### Frontend
-- Angular
+- **Angular 21+** (projeto em modo standalone)
 - Angular Material
 - Reactive Forms
 - HttpClient
@@ -95,6 +95,10 @@ A arquitetura foi pensada para **resolver o problema com qualidade**, evitando c
 - Docker
 - Docker Compose
 
+Para **desenvolvimento local (sem Docker)**:
+- **.NET SDK 10**
+- Node.js **20+**
+- Angular CLI **21+**
 ---
 
 ### 1️⃣ Clonar o repositório
@@ -126,7 +130,38 @@ docker compose up -d --build
 
 - **Backend (API) - Swagger**  
   http://localhost:8080/swagger/index.html
+
 ---
+
+## 📦 Dados de exemplo (JSON)
+
+A listagem de títulos **não depende de banco de dados**: ela parte de um **arquivo JSON local** (seed) no projeto do backend.
+
+- Procure no projeto **`DesafioPasch.API`** por um arquivo `*Data/titulos.json`.
+- O serviço do backend lê esse arquivo e **mapeia** para o DTO retornado no endpoint `GET /v1/titulos/atrasados`.
+
+### Estrutura esperada
+
+O JSON deve conter **um array** de objetos com campos compatíveis com a seguinte estrutura (exemplo):
+
+```json
+[
+  {
+    "numeroTitulo": "TIT-1001",
+    "nomeDevedor": "João Silva",
+    "quantidadeParcelas": 2,
+    "valorOriginal": 300.00,
+    "diasEmAtraso": 47,
+    "valorAtualizado": 310.16,
+    "multa": 6.00,
+    "jurosTotais": 4.16
+  }
+]
+```
+
+Observações:
+- Se você optar por armazenar no JSON apenas os campos “base” (por exemplo `valorOriginal` e `diasEmAtraso`), a regra de negócio pode calcular `multa`, `jurosTotais` e `valorAtualizado` em tempo de execução.
+- Manter o JSON versionado no repositório torna o desafio **reprodutível** e facilita o review.
 
 ### 4️⃣ Parar os containers
 
