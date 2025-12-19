@@ -1,0 +1,6 @@
+@DesafioPasch.API_HostAddress = http://localhost:5255
+
+GET {{DesafioPasch.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

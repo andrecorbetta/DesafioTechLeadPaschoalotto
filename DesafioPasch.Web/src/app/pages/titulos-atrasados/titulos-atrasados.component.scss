@@ -1,0 +1,118 @@
+.page {
+  margin: 16px;
+  padding: 8px;
+}
+
+.card {
+  margin: 16px;
+  padding: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-wrap {
+  overflow: auto;
+  margin-top: 12px;
+}
+
+.right {
+  text-align: right;
+}
+
+.error {
+  margin-top: 10px;
+  color: #b00020;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   ✅ MATERIAL TABLE FIX
+   ========================= */
+
+
+table {
+  width: 100%;
+}
+
+.mat-mdc-table {
+  width: 100%;
+  table-layout: fixed; /* chave do alinhamento */
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-cell {
+  padding: 8px 12px;
+  box-sizing: border-box;
+  white-space: nowrap; /* evita quebrar e “empurrar” colunas */
+}
+
+.mat-column-nomeDevedor .mat-mdc-cell,
+.mat-column-nomeDevedor .mat-mdc-header-cell {
+  white-space: normal;
+}
+
+.mat-column-quantidadeParcelas .mat-mdc-cell,
+.mat-column-valorOriginal .mat-mdc-cell,
+.mat-column-diasEmAtraso .mat-mdc-cell,
+.mat-column-valorAtualizado .mat-mdc-cell,
+.mat-column-multa .mat-mdc-cell,
+.mat-column-jurosTotais .mat-mdc-cell {
+  text-align: right;
+}
+
+.mat-column-quantidadeParcelas .mat-mdc-header-cell,
+.mat-column-valorOriginal .mat-mdc-header-cell,
+.mat-column-diasEmAtraso .mat-mdc-header-cell,
+.mat-column-valorAtualizado .mat-mdc-header-cell,
+.mat-column-multa .mat-mdc-header-cell,
+.mat-column-jurosTotais .mat-mdc-header-cell {
+  text-align: right;
+}
+
+.mat-column-numeroTitulo { width: 120px; }
+.mat-column-nomeDevedor { width: 260px; }
+.mat-column-quantidadeParcelas { width: 110px; }
+.mat-column-valorOriginal { width: 140px; }
+.mat-column-diasEmAtraso { width: 120px; }
+.mat-column-valorAtualizado { width: 150px; }
+.mat-column-multa { width: 120px; }
+.mat-column-jurosTotais { width: 120px; }
+
+.mat-mdc-row,
+.mat-mdc-header-row {
+  height: 48px;
+}
+
+.mat-mdc-row .mat-mdc-cell,
+.mat-mdc-header-row .mat-mdc-header-cell {
+  border-bottom: 1px solid #eee;
+}

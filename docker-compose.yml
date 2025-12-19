@@ -1,0 +1,18 @@
+services:
+  backend:
+    container_name: desafio-backend
+    build:
+      context: ./DesafioPasch.API
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+
+  frontend:
+    container_name: desafio-frontend
+    build:
+      context: ./DesafioPasch.Web
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend

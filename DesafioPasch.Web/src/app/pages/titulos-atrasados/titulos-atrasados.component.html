@@ -1,0 +1,130 @@
+<mat-card class="page">
+  <mat-card-title>Títulos em atraso</mat-card-title>
+  <mat-card-subtitle>Lista de títulos em atraso com cálculo de multa e juros.</mat-card-subtitle>
+</mat-card>
+
+<mat-card class="card">
+  <mat-card-title>Filtros</mat-card-title>
+
+  <form [formGroup]="form" class="grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Número do título</mat-label>
+      <input matInput formControlName="numeroTitulo" placeholder="Ex: TIT-1001" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nome do devedor</mat-label>
+      <input matInput formControlName="nomeDevedor" placeholder="Ex: João" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Mín. dias atraso</mat-label>
+      <input matInput type="number" formControlName="minDiasAtraso" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Máx. dias atraso</mat-label>
+      <input matInput type="number" formControlName="maxDiasAtraso" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Mín. valor atualizado</mat-label>
+      <input matInput type="number" formControlName="minValorAtualizado" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Máx. valor atualizado</mat-label>
+      <input matInput type="number" formControlName="maxValorAtualizado" />
+    </mat-form-field>
+  </form>
+
+  <div class="actions">
+    <button mat-flat-button color="primary" type="button" (click)="onBuscarClick()">
+      <mat-icon>search</mat-icon>
+      Buscar
+    </button>
+
+    <button mat-stroked-button type="button" (click)="onLimparClick()">
+      <mat-icon>cleaning_services</mat-icon>
+      Limpar
+    </button>
+  </div>
+
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+</mat-card>
+
+<mat-card class="card">
+  <div class="table-header">
+    <mat-card-title>Resultados ({{ itens.length }})</mat-card-title>
+  </div>
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="pagedItens" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z0">
+
+      <ng-container matColumnDef="numeroTitulo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="numeroTitulo">Número</th>
+        <td mat-cell *matCellDef="let x">{{ x.numeroTitulo }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="nomeDevedor">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="nomeDevedor">Devedor</th>
+        <td mat-cell *matCellDef="let x">{{ x.nomeDevedor }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="quantidadeParcelas">
+        <th mat-header-cell *matHeaderCellDef >Parcelas</th>
+        <td mat-cell *matCellDef="let x" >{{ x.quantidadeParcelas }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="valorOriginal">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="valorOriginal" >Valor original</th>
+        <td mat-cell *matCellDef="let x" >
+          {{ x.valorOriginal | currency:'BRL':'symbol':'1.2-2' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="diasEmAtraso">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="diasEmAtraso" >Dias atraso</th>
+        <td mat-cell *matCellDef="let x" >{{ x.diasEmAtraso }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="valorAtualizado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="valorAtualizado" >Valor atualizado</th>
+        <td mat-cell *matCellDef="let x" >
+          {{ x.valorAtualizado | currency:'BRL':'symbol':'1.2-2' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="multa">
+        <th mat-header-cell *matHeaderCellDef >Multa</th>
+        <td mat-cell *matCellDef="let x" >
+          {{ x.multa | currency:'BRL':'symbol':'1.2-2' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="jurosTotais">
+        <th mat-header-cell *matHeaderCellDef >Juros</th>
+        <td mat-cell *matCellDef="let x" >
+          {{ x.jurosTotais | currency:'BRL':'symbol':'1.2-2' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <tr class="empty" *ngIf="!loading && itens.length === 0">
+        <td [attr.colspan]="displayedColumns.length">Nenhum título encontrado.</td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="itens.length"
+    [pageIndex]="pageIndex"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPage($event)">
+  </mat-paginator>
+</mat-card>
